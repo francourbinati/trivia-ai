@@ -1,6 +1,6 @@
 // This file is machine-generated - edit at your own risk.
 
-'use server';
+"use server"
 
 /**
  * @fileOverview Generates trivia questions based on a given subject.
@@ -10,52 +10,45 @@
  * - GenerateTriviaQuestionsOutput - The return type for the generateTriviaQuestions function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const GenerateTriviaQuestionsInputSchema = z.object({
-  subject: z
-    .string()
-    .describe('The subject for which to generate trivia questions.'),
-});
-export type GenerateTriviaQuestionsInput = z.infer<
-  typeof GenerateTriviaQuestionsInputSchema
->;
-
-const GenerateTriviaQuestionsOutputSchema = z.object({
-  trivia: z
-    .array(
-      z.object({
-        question: z.string().describe('The trivia question.'),
-        options: z
-          .array(z.string())
-          .length(4)
-          .describe('An array of 4 multiple-choice options for the question.'),
-        correctAnswer: z
-          .string()
-          .describe('The correct answer from the provided options.'),
-      })
-    )
-    .length(5)
-    .describe(
-      'An array of 5 trivia questions, each with 4 options and a correct answer.'
-    ),
-});
-export type GenerateTriviaQuestionsOutput = z.infer<
-  typeof GenerateTriviaQuestionsOutputSchema
->;
+import { ai } from "@/ai/genkit"
+import {
+    GenerateTriviaQuestionsInput,
+    GenerateTriviaQuestionsOutput,
+    Schema_GenerateTriviaQuestionsInput,
+    Schema_GenerateTriviaQuestionsOutput,
+} from "@/types"
+import { z } from "genkit"
 
 export async function generateTriviaQuestions(
-  input: GenerateTriviaQuestionsInput
+    input: GenerateTriviaQuestionsInput
 ): Promise<GenerateTriviaQuestionsOutput> {
-  return generateTriviaQuestionsFlow(input);
+    const { subject, difficulty } = input
+
+    const prompt = `
+    Generate 5 trivia questions about ${subject} with varying difficulty levels.
+    
+    Difficulty level: ${difficulty}
+    
+    For each question, provide:
+    1. The question itself
+    2. 4 multiple choice options (A, B, C, D)
+    3. The correct answer
+    
+    Make sure the questions are:
+    - Clear and concise
+    - Based on factual information
+    - Have only one correct answer
+    - The options should be plausible but distinct
+    - Include a mix of straightforward and challenging questions
+  `
+    return generateTriviaQuestionsFlow(input)
 }
 
 const prompt = ai.definePrompt({
-  name: 'generateTriviaQuestionsPrompt',
-  input: {schema: GenerateTriviaQuestionsInputSchema},
-  output: {schema: GenerateTriviaQuestionsOutputSchema},
-  prompt: `You are a trivia expert. For the subject "{{{subject}}}", generate an engaging trivia quiz with 5 questions.
+    name: "generateTriviaQuestionsPrompt",
+    input: { schema: Schema_GenerateTriviaQuestionsInput },
+    output: { schema: Schema_GenerateTriviaQuestionsOutput },
+    prompt: `You are a trivia expert. For the subject "{{{subject}}}", generate an engaging trivia quiz with 5 questions.
 
 For each question, provide:
 1.  A clear and concise question.
@@ -65,16 +58,16 @@ For each question, provide:
 Ensure one of the options is the correct answer. The options should be plausible to make the quiz challenging.
 
 Return the entire quiz as a single JSON object that strictly follows the provided output schema.`,
-});
+})
 
 const generateTriviaQuestionsFlow = ai.defineFlow(
-  {
-    name: 'generateTriviaQuestionsFlow',
-    inputSchema: GenerateTriviaQuestionsInputSchema,
-    outputSchema: GenerateTriviaQuestionsOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+    {
+        name: "generateTriviaQuestionsFlow",
+        inputSchema: Schema_GenerateTriviaQuestionsInput,
+        outputSchema: Schema_GenerateTriviaQuestionsOutput,
+    },
+    async (input) => {
+        const { output } = await prompt(input)
+        return output!
+    }
+)
